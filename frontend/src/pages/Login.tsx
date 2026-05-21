@@ -1,84 +1,143 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from '../api/axios';
 
-interface LoginForm {
-  email: string
-  password: string
-}
+const Login = () => {
+  const navigate = useNavigate();
 
-export default function Login() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
 
-  const onSubmit = async (data: LoginForm) => {
-    setLoading(true)
-    setError('')
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
+    e.preventDefault();
+
     try {
-      await login(data.email, data.password)
-      navigate('/dashboard')
-    } catch (err: any) {
-      setError(err.message || 'Login failed')
-    } finally {
-      setLoading(false)
-    }
-  }
+      const response = await axios.post(
+        '/auth/login',
+        formData
+      );
 
-  const inputClass = "w-full bg-gray-800 border border-gray-700 text-white rounded px-3 py-2.5 focus:outline-none focus:border-blue-500 text-sm"
+      localStorage.setItem(
+        'token',
+        response.data.data.token
+      );
+
+      localStorage.setItem(
+        'user',
+        JSON.stringify(response.data.data.user)
+      );
+
+      navigate('/dashboard');
+    } catch (error: any) {
+      alert(
+        error.response?.data?.message ||
+          'Login failed'
+      );
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-blue-400 font-bold text-3xl">GigFlow</h1>
-          <p className="text-gray-400 mt-2">Smart Leads Dashboard</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-6">
+
+      {/* Glow Background */}
+      <div className="absolute left-[-120px] top-[-120px] h-[300px] w-[300px] rounded-full bg-purple-600/20 blur-3xl" />
+
+      <div className="absolute bottom-[-120px] right-[-120px] h-[300px] w-[300px] rounded-full bg-blue-600/20 blur-3xl" />
+
+      {/* Grid Overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:70px_70px]" />
+
+      <div className="relative z-10 w-full max-w-md">
+
+        {/* Logo */}
+        <div className="mb-10 text-center">
+          <h1 className="bg-gradient-to-r from-white via-purple-300 to-purple-500 bg-clip-text text-7xl font-black tracking-tight text-transparent">
+            GigFlow
+          </h1>
+
+          <p className="mt-4 text-lg text-gray-400">
+            AI Powered Smart Leads CRM
+          </p>
         </div>
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-8">
-          <h2 className="text-white font-semibold text-xl mb-6">Sign In</h2>
-          {error && (
-            <div className="bg-red-900 border border-red-700 text-red-300 text-sm px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+        {/* Card */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+
+          <h2 className="mb-8 text-3xl font-bold text-white">
+            Welcome Back
+          </h2>
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+
             <div>
-              <label className="text-gray-400 text-sm mb-1 block">Email</label>
+              <label className="mb-2 block text-sm text-gray-400">
+                Email
+              </label>
+
               <input
-                {...register('email', { required: 'Email is required' })}
                 type="email"
-                className={inputClass}
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
                 placeholder="you@example.com"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition focus:border-purple-500"
+                required
               />
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
             </div>
+
             <div>
-              <label className="text-gray-400 text-sm mb-1 block">Password</label>
+              <label className="mb-2 block text-sm text-gray-400">
+                Password
+              </label>
+
               <input
-                {...register('password', { required: 'Password is required' })}
                 type="password"
-                className={inputClass}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
                 placeholder="••••••••"
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition focus:border-purple-500"
+                required
               />
-              {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password.message}</p>}
             </div>
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded font-medium transition disabled:opacity-50 mt-2"
+              className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 py-4 text-lg font-semibold text-white transition hover:scale-[1.02]"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              Sign In
             </button>
           </form>
-          <p className="text-gray-400 text-sm text-center mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-blue-400 hover:underline">Register</Link>
+
+          <p className="mt-8 text-center text-gray-400">
+            Don’t have an account?{' '}
+            <Link
+              to="/register"
+              className="font-medium text-purple-400 hover:text-purple-300"
+            >
+              Register
+            </Link>
           </p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default Login;
