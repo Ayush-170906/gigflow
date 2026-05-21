@@ -52,6 +52,18 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Centralized error handler
 app.use(errorHandler);
 
+// Keep-alive ping to prevent Render free tier from sleeping
+if (process.env.NODE_ENV === 'production') {
+  setInterval(() => {
+    const https = require('https');
+    https.get('https://gigflow-o1y9.onrender.com/health', (res: any) => {
+      console.log(`Keep-alive ping: ${res.statusCode}`);
+    }).on('error', (err: any) => {
+      console.error('Keep-alive ping failed:', err.message);
+    });
+  }, 14 * 60 * 1000);
+}
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
