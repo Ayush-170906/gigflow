@@ -13,7 +13,15 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'https://gigflow-delta-indol.vercel.app',
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Connect to Database
